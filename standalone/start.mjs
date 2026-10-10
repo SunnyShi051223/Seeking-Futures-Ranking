@@ -56,7 +56,7 @@ if (isMain) {
   if (args.host) process.env.RT_HOST = String(args.host)
 
   console.log('╔══════════════════════════════════════════════════════════════╗')
-  console.log('║  期货 20 日涨跌幅 rank20 · 独立运行（不依赖 DSH）             ║')
+  console.log('║  期货涨跌幅与 SAR 趋势排序 · 独立运行（不依赖 DSH）           ║')
   console.log('╚══════════════════════════════════════════════════════════════╝')
   console.log(`  工作区   : ${WORKSPACE}`)
   console.log(`  数据目录 : ${args.outDir}`)
@@ -85,7 +85,7 @@ if (isMain) {
     const lan = lanAddress()
     console.log(`  实时服务 : http://127.0.0.1:${port}/`)
     if (lan) console.log(`  局域网   : http://${lan}:${port}/`)
-    console.log(`  接口     : /api/health  /api/rank20/latest  /events(SSE)`)
+    console.log(`  接口     : /api/health  /api/rank20/latest  /api/sar/latest  /events(SSE)`)
     console.log('')
     console.log('  ★ 用浏览器打开上面的地址即可查看实时 rank20 看板')
   }

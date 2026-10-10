@@ -79,6 +79,12 @@ b, .num, td.num { font-variant-numeric: tabular-nums; }
 .kv b { font-weight: 600; font-variant-numeric: tabular-nums; }
 .status { display: flex; gap: 8px; margin-left: auto; }
 .tools { display: flex; gap: 8px; }
+.modeSwitch { display: inline-flex; padding: 2px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel2); }
+.modeSwitch button {
+  height: 26px; padding: 0 9px; border: 0; border-radius: 5px; background: transparent;
+  color: var(--dim); font: inherit; font-size: 12px; white-space: nowrap; cursor: pointer;
+}
+.modeSwitch button.active { background: var(--info); color: #fff; }
 #search {
   width: 190px; height: 30px; padding: 0 10px; color: var(--text);
   background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; outline: none;
@@ -223,13 +229,23 @@ td.flashDown { animation: flashDown 300ms ease-out; }
 }
 .grid tbody tr.skel td { height: var(--rowH); }
 .grid tbody tr.skel span { display: block; height: 10px; border-radius: 3px; background: var(--panel2); }
+.sarGrid th:nth-child(1) { width: 8%; }
+.sarGrid th:nth-child(2) { width: 17%; }
+.sarGrid th:nth-child(3) { width: 15%; }
+.sarGrid th:nth-child(4) { width: 16%; }
+.sarGrid th:nth-child(5) { width: 12%; }
+.sarGrid th:nth-child(6) { width: 14%; }
+.sarGrid th:nth-child(7) { width: 18%; }
+.sarGrid tbody tr { cursor: pointer; }
+.sarGrid tbody tr:hover { background: rgba(74,158,255,.08); }
+.sarGrid .sarEmpty td { height: var(--rowH); text-align: center; }
 
 /* ── 就地展开行（点击榜单行向下展开：导航条 + 内容）────────────────── */
 .grid tbody tr.open { background: rgba(74,158,255,.12); box-shadow: inset 3px 0 0 var(--info); }
 .grid tbody tr.expandRow { cursor: default; background: var(--panel2); }
 .grid tbody tr.expandRow > td { padding: 0; border-bottom: 2px solid var(--info); overflow: hidden; }
 .grid tbody tr.expandRow:hover { background: var(--panel2); }
-.board h2 .hint { font-size: 11px; color: var(--dim2); font-weight: 400; margin-left: 8px; }
+.board h2 .hint { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: var(--dim2); font-weight: 400; margin-left: 8px; }
 
 .panel { padding: 0 0 12px; min-width: 0; overflow: hidden; }
 .panelLoad { padding: 22px 16px; color: var(--dim); font-size: 13px; }
@@ -248,6 +264,12 @@ td.flashDown { animation: flashDown 300ms ease-out; }
 .panelNav button[role='tab'].active { color: var(--text); border-bottom-color: var(--info); background: rgba(74,158,255,.08); }
 .panelHead { margin-left: 10px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .panelHead code { font-size: 12px; color: #c8cfdb; }
+.sarPanelSignal, .sarChartNote { font-size: 12px; white-space: nowrap; }
+.sarDetails { max-width: 620px; padding: 12px 16px; }
+.sarDetails p { margin: 0 0 10px; }
+.chartLegend .lg i.sar { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.chartLegend .sar.up { background: var(--up); }
+.chartLegend .sar.down { background: var(--down); }
 .panelClose {
   margin-left: auto; height: 26px; padding: 0 10px; font-size: 12px; cursor: pointer;
   background: var(--panel); color: var(--dim); border: 1px solid var(--line); border-radius: 6px;

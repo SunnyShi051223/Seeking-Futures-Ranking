@@ -1,0 +1,951 @@
+{
+  "source": "rank20/kline 日线 + realtime-server/var/sar-hourly-cache.json 的 60 分钟 OHLC",
+  "inputFiles": [
+    {
+      "path": "realtime-server/var/sar-hourly-cache.json",
+      "bytes": 5135574,
+      "sha256": "71c92ae49a32dee8bbf61a63aefb2fa0a4ff5819d12c4371a8a1c26872f84db2"
+    },
+    {
+      "path": "rank20/kline/A2611.json",
+      "bytes": 21288,
+      "sha256": "15b5444bc4a5db6b71d0067f50b1db3df740b53d84b06f884ccfcbbb079eca82"
+    },
+    {
+      "path": "rank20/kline/AD2612.json",
+      "bytes": 10255,
+      "sha256": "a1165585a65a284e65302a1db555d5ba651a5852a3deeb698a72680a924500d6"
+    },
+    {
+      "path": "rank20/kline/AG2612.json",
+      "bytes": 20367,
+      "sha256": "7de8a6474535b478798c6f845e38ac61aecfd2106da1c6567611b6a1cdb23161"
+    },
+    {
+      "path": "rank20/kline/AL2611.json",
+      "bytes": 21926,
+      "sha256": "64cac667c7b45cb8a68886a378ffd3111ddb64c2cb3f0249451e7e842bc337c9"
+    },
+    {
+      "path": "rank20/kline/AO2701.json",
+      "bytes": 17019,
+      "sha256": "2ab50c5d107cd2e2fdc1ec2c0a76de3b5427b831117377234802c8c23dcaee51"
+    },
+    {
+      "path": "rank20/kline/AP701.json",
+      "bytes": 16820,
+      "sha256": "7abf7c72be6d4e7daff90d5dca21ccde8b89773af9128c2d35be2b1cd1569d4e"
+    },
+    {
+      "path": "rank20/kline/AU2612.json",
+      "bytes": 23187,
+      "sha256": "747dab93487f516838fde893e41e22494b68648f1cd9c4958d9ad36293b78502"
+    },
+    {
+      "path": "rank20/kline/B2611.json",
+      "bytes": 20198,
+      "sha256": "f7a270aefa0e2bd80e02d429ad4a2963550a6536415fd7135c70260c587b55dd"
+    },
+    {
+      "path": "rank20/kline/BB2701.json",
+      "bytes": 6432,
+      "sha256": "8d345249c8ca4d62fedfc1d5cac9cb5324f6f4ce9d27ce6f6b22d7239ea58d0e"
+    },
+    {
+      "path": "rank20/kline/BC2611.json",
+      "bytes": 7517,
+      "sha256": "8f41390380df761d1bbb459d9beebf833e9b8a8ce4955c7130f5af551790b2b4"
+    },
+    {
+      "path": "rank20/kline/BR2611.json",
+      "bytes": 19258,
+      "sha256": "195bb5b70f20966bc17407326f40456ce7a33edd04a33fa26229a95094b9dd9b"
+    },
+    {
+      "path": "rank20/kline/BU2611.json",
+      "bytes": 19319,
+      "sha256": "53cb4aa6ff83d9a1e3cfa5ac20b25537d2a6715dfd15e39ec6f81ba194659973"
+    },
+    {
+      "path": "rank20/kline/BZ2611.json",
+      "bytes": 12698,
+      "sha256": "92af9beba5cc29026a1e8bd46cc91f8021666bcaaa79224a1455cff2b3c8f248"
+    },
+    {
+      "path": "rank20/kline/C2611.json",
+      "bytes": 21455,
+      "sha256": "18a83ca2a527d9ce00e82421581975ba0f1dfbebd537246ff5e2d63bb173ba25"
+    },
+    {
+      "path": "rank20/kline/CF701.json",
+      "bytes": 18110,
+      "sha256": "0f27e2f909c111af8b84a34952eaa50b21e50f2d1a2fe1b0f004230ed18c99c2"
+    },
+    {
+      "path": "rank20/kline/CJ701.json",
+      "bytes": 17123,
+      "sha256": "5966961ca6324fa753dbd41702e48fac680604121749009b42c6da0f7eebf290"
+    },
+    {
+      "path": "rank20/kline/CS2611.json",
+      "bytes": 20786,
+      "sha256": "367e62fe9b226720ab3657bebab8d895ec63e56d39b5094f1cfc36967437f227"
+    },
+    {
+      "path": "rank20/kline/CU2611.json",
+      "bytes": 22832,
+      "sha256": "555760e08a44d42eb8fc21908928705bad68eaa998456fd74bf1215cb6b60ac0"
+    },
+    {
+      "path": "rank20/kline/CY611.json",
+      "bytes": 8450,
+      "sha256": "69fb1cd2d60a8463a7433124fa619fec0e94897a0f26e2acae79ad70c4edf967"
+    },
+    {
+      "path": "rank20/kline/EB2611.json",
+      "bytes": 19192,
+      "sha256": "b8385d8f343183bc9a51f8530c4fabae1cd6c28f61e3fa86969f8b309ca24b01"
+    },
+    {
+      "path": "rank20/kline/EC2611.json",
+      "bytes": 8880,
+      "sha256": "f99a629ad3a6527dd1b02dbf27b1b955409a5ce551ec2e9148feb7a6bdf41c69"
+    },
+    {
+      "path": "rank20/kline/EG2611.json",
+      "bytes": 19079,
+      "sha256": "f061c59e779e31465c5b8e4e6ed2ba3afa2030eb7ad7ebc2dd9d8b303f18dd53"
+    },
+    {
+      "path": "rank20/kline/FB2611.json",
+      "bytes": 12295,
+      "sha256": "0eb6c7b8587139b10452a7d684461b7a152c2e28eade4be56ba6b510ca46860e"
+    },
+    {
+      "path": "rank20/kline/FG701.json",
+      "bytes": 17002,
+      "sha256": "a12c09ac2614acc112a5101a03807f2c33df2929dcb8ba74445c00c38787800e"
+    },
+    {
+      "path": "rank20/kline/FU2611.json",
+      "bytes": 22142,
+      "sha256": "0486a258de71a3887c93bc06fd1a462f672c183b9f344e00eded7494362e86a0"
+    },
+    {
+      "path": "rank20/kline/HC2701.json",
+      "bytes": 17200,
+      "sha256": "c7b4440b189b30cd227e99c4c0535b33474adfc588031b93a8943f88eeff45d4"
+    },
+    {
+      "path": "rank20/kline/I2701.json",
+      "bytes": 17176,
+      "sha256": "69089007012ebcc886d90ecb26c7cced2d3d093a0aaaecc8541b0de98b3d829c"
+    },
+    {
+      "path": "rank20/kline/IC2612.json",
+      "bytes": 12335,
+      "sha256": "da39dce75a916dd91bc12b3cb5bf2c7cf8e17206172d9a498e87ed263e5c72b4"
+    },
+    {
+      "path": "rank20/kline/IF2612.json",
+      "bytes": 12344,
+      "sha256": "86d24f8f73a3a56d882fd7fd652b9cd6b854845ae2604e543d740ddec142c3fa"
+    },
+    {
+      "path": "rank20/kline/IH2612.json",
+      "bytes": 12340,
+      "sha256": "6ba9a09b4d1a4020e0fb22d2f407152c08bcf09e0304a5f2394f588edeb1a710"
+    },
+    {
+      "path": "rank20/kline/IM2612.json",
+      "bytes": 12388,
+      "sha256": "2016040f4c96726d89d119c93a8c165c32a19469a35079f24afb0b3ff85b9024"
+    },
+    {
+      "path": "rank20/kline/J2701.json",
+      "bytes": 17441,
+      "sha256": "672aa76938677546bd972a4574865ca876eb86c94b89e62dc664a402e2e41511"
+    },
+    {
+      "path": "rank20/kline/JD2611.json",
+      "bytes": 20501,
+      "sha256": "cf81ac97b10712238399350577accd804d9553c42f583b638ebd7c8f41bd17ce"
+    },
+    {
+      "path": "rank20/kline/JM2701.json",
+      "bytes": 17960,
+      "sha256": "1a4d437223bce27e5500f26e2c196b53d6a371b423428f5138cb5a646329aa67"
+    },
+    {
+      "path": "rank20/kline/L2611F.json",
+      "bytes": 8911,
+      "sha256": "ae621d9a0af4eba9915c66bb1aadfcf4dface7d987abb525564763d08c69b38f"
+    },
+    {
+      "path": "rank20/kline/L2701.json",
+      "bytes": 17156,
+      "sha256": "b40424d911973c9345d32cdb825d728e9eccbcef5bab25c25f8e81267d85ec8d"
+    },
+    {
+      "path": "rank20/kline/LC2701.json",
+      "bytes": 18817,
+      "sha256": "1ddc67766e0ba8063332b330eaec28a339962344b6bedb510012f6540e745150"
+    },
+    {
+      "path": "rank20/kline/LG2611.json",
+      "bytes": 19706,
+      "sha256": "71f429039c1c454ce40b9bae12117e6f086d87dcc4b8f1b256fe26acfc947b8d"
+    },
+    {
+      "path": "rank20/kline/LH2611.json",
+      "bytes": 21691,
+      "sha256": "32c0356121f13eaee114dd3ef438644d9ed07d29feab50e8db50885567eb1c4d"
+    },
+    {
+      "path": "rank20/kline/LU2612.json",
+      "bytes": 18231,
+      "sha256": "042b880d0d097d1e5afdc2c1dc7cbc5054efccf989d1bf7ebcd6df345ead7dea"
+    },
+    {
+      "path": "rank20/kline/M2701.json",
+      "bytes": 17486,
+      "sha256": "0fb0ef39b3a44bf4326dd41378fc4a089a2c7a488084aeae910865cc0d67536a"
+    },
+    {
+      "path": "rank20/kline/MA611.json",
+      "bytes": 21030,
+      "sha256": "b5dd328fe2346232fb4dbbc32e50a9c4d798bd1a2f5baa591d0fd3e0fd033df0"
+    },
+    {
+      "path": "rank20/kline/NI2611.json",
+      "bytes": 22860,
+      "sha256": "9e23dcf7ac77cff883007c76aef7bad8e23a146585f6e99fdd74562024f6b886"
+    },
+    {
+      "path": "rank20/kline/NR2612.json",
+      "bytes": 14895,
+      "sha256": "7362bfd1ddb82b6f558d15ce91a69224e1354e4aa29c3d17576702025cd3c07a"
+    },
+    {
+      "path": "rank20/kline/OI701.json",
+      "bytes": 17245,
+      "sha256": "fbe0095457b8e41e2e520bed0542ace68bb42db7a65118ca13698de2f7bd2dc6"
+    },
+    {
+      "path": "rank20/kline/OP2611.json",
+      "bytes": 8163,
+      "sha256": "0141a142c4a7387c69c83cf102c59b0e056f14601543f0d71a3ea212d258dc98"
+    },
+    {
+      "path": "rank20/kline/P2701.json",
+      "bytes": 17212,
+      "sha256": "bd545c2e3c757bd36f5194d04bb0e5a31914f43a0a7e0a2d741caebbcc4ed719"
+    },
+    {
+      "path": "rank20/kline/PB2611.json",
+      "bytes": 20049,
+      "sha256": "a07d3561b14fd86b1cd78bad1cb0d98902cf431ec6c574d316346e0a8279583a"
+    },
+    {
+      "path": "rank20/kline/PD2612.json",
+      "bytes": 19385,
+      "sha256": "665877f732c3f21609838ab4f72b93f7a4ae341f99b89643b6faed22ecdbfb3f"
+    },
+    {
+      "path": "rank20/kline/PF611.json",
+      "bytes": 17645,
+      "sha256": "50eeafe7a61bf4892ff92d26c9a85d36eded2b889d6cfb25f464ca6927545649"
+    },
+    {
+      "path": "rank20/kline/PG2611.json",
+      "bytes": 18458,
+      "sha256": "83c2dbccf243f3a66274a9596156077ad0716d3e4284afee8794ab7b9a365fbb"
+    },
+    {
+      "path": "rank20/kline/PK611.json",
+      "bytes": 20794,
+      "sha256": "dcc0a1a1f1b3e24a1d779e093c35bdd1e90bcec7477bef56842ada203b9d84b7"
+    },
+    {
+      "path": "rank20/kline/PL611.json",
+      "bytes": 10248,
+      "sha256": "ce635809f4eefd2b95193e919f2ea64637a173677ac757a74fd61c66f945fb17"
+    },
+    {
+      "path": "rank20/kline/PP2612F.json",
+      "bytes": 7357,
+      "sha256": "a27289f49df1f25b53b3fc6487c14d8c90663a1787cc964f73e0873796e9e254"
+    },
+    {
+      "path": "rank20/kline/PP2701.json",
+      "bytes": 17247,
+      "sha256": "cc0a4afb451512960d073d14a8e8d7c89ec2f8606ed8bccf840e24766401bc3f"
+    },
+    {
+      "path": "rank20/kline/PR611.json",
+      "bytes": 16036,
+      "sha256": "d14874ce2029816be86c20221899415b238367ad8995536ce0f797ba94063239"
+    },
+    {
+      "path": "rank20/kline/PS2611.json",
+      "bytes": 19535,
+      "sha256": "af936df9dc2c4b75a10a6aaef78bfe58e3869777de5ef8408a556069213c11d6"
+    },
+    {
+      "path": "rank20/kline/PT2612.json",
+      "bytes": 19668,
+      "sha256": "e098562c390bc602203dce488016ddd7c7d23b8691ac5d38b21328c0c5d24b26"
+    },
+    {
+      "path": "rank20/kline/PX611.json",
+      "bytes": 18855,
+      "sha256": "229ef978b41e84a250d03c4ca56f91f743e33baf899f48571461900ebd0242ea"
+    },
+    {
+      "path": "rank20/kline/RB2701.json",
+      "bytes": 17364,
+      "sha256": "0e41c91b3433ea714a0e7da98e18af5c3a8c15665f50e6898cc1424a7518f434"
+    },
+    {
+      "path": "rank20/kline/RM701.json",
+      "bytes": 17298,
+      "sha256": "dec0d95eb68e38eb4bc48f17e27ed04115676828f8ac22a3f402ac32127831b8"
+    },
+    {
+      "path": "rank20/kline/RR2612.json",
+      "bytes": 14137,
+      "sha256": "59b2d0af5a8f489c21ed1e1c6fea022c848a9d8294cfb5036a024d20ed0273a1"
+    },
+    {
+      "path": "rank20/kline/RS611.json",
+      "bytes": 3882,
+      "sha256": "81648963433f1b397105ecc8d0f719b3d93cd044057f46e78527ca1ec4c90a8e"
+    },
+    {
+      "path": "rank20/kline/RU2701.json",
+      "bytes": 18094,
+      "sha256": "16c3043011e1d7ea36033f88e81d0e73e062593175d10aab05e3d5fb82c5b5ad"
+    },
+    {
+      "path": "rank20/kline/SA701.json",
+      "bytes": 17277,
+      "sha256": "7ae18644f2b143a05dfd93b0e9b86fb96212434179d7c1d78b5b6e5bad688191"
+    },
+    {
+      "path": "rank20/kline/SC2611.json",
+      "bytes": 20522,
+      "sha256": "29dfa4b3909c0e0a41e77fe9a0708c7ad3640afb3fcdb02623d0b1d25c70c180"
+    },
+    {
+      "path": "rank20/kline/SF611.json",
+      "bytes": 20148,
+      "sha256": "f542f20697456db9ca6aede09873525bafb9898826f6be47d1643e2838d6aef4"
+    },
+    {
+      "path": "rank20/kline/SH611.json",
+      "bytes": 20515,
+      "sha256": "5e5bfa89ff5737b81cb5e6864252cd0f7ace9140405a331997f90968c969592e"
+    },
+    {
+      "path": "rank20/kline/SI2611.json",
+      "bytes": 20877,
+      "sha256": "8203f4bf780356ff394ceca34bf0de9452b248927da4e7898e98bf8ac9fc6072"
+    },
+    {
+      "path": "rank20/kline/SM611.json",
+      "bytes": 18558,
+      "sha256": "7480d72c9e1badf25b8d7b17498cff3e6e9c23dd09b53e4ce7e34ff11ec4683f"
+    },
+    {
+      "path": "rank20/kline/SN2611.json",
+      "bytes": 21862,
+      "sha256": "14885f990f1c0a5b678164872ea3eb1023a5243142727da89ab1e6bad3ac9ed4"
+    },
+    {
+      "path": "rank20/kline/SP2611.json",
+      "bytes": 20705,
+      "sha256": "8712127dcf1b6e983da80183aae4e54e088ea14ddf9473c3964b334c77123d81"
+    },
+    {
+      "path": "rank20/kline/SR701.json",
+      "bytes": 17236,
+      "sha256": "8810c6ff073cf247c70fc8fe1937b84042fbff4eeec44ec47e66108068bb8198"
+    },
+    {
+      "path": "rank20/kline/SS2611.json",
+      "bytes": 21290,
+      "sha256": "53c46875a2a3f0f43e4cd6e8907809c1931c26d1aa2b30b06524df16e90fb9cf"
+    },
+    {
+      "path": "rank20/kline/T2612.json",
+      "bytes": 15274,
+      "sha256": "bd1c11f1775528087b2e1fb93b4a79e1fa3395d9244cd880d42b92ab6bf57a8a"
+    },
+    {
+      "path": "rank20/kline/TA701.json",
+      "bytes": 17352,
+      "sha256": "2c31384e9e5c525e26a94408988bc6a420a92200f17a761692069da54e55cdd0"
+    },
+    {
+      "path": "rank20/kline/TF2612.json",
+      "bytes": 15184,
+      "sha256": "75a13ef4cc0c61f656224e0eb8e723f75d09dde76fc583759c5937de80bb97bd"
+    },
+    {
+      "path": "rank20/kline/TL2612.json",
+      "bytes": 14939,
+      "sha256": "b7bad226129fc536b2a0d256b267d2e0055990397674ed8bc3e2820c91761247"
+    },
+    {
+      "path": "rank20/kline/TS2612.json",
+      "bytes": 15311,
+      "sha256": "c8306cc11b4acbf1615810c47d32142c1ddbcd5778787d17e119b6cfd338619c"
+    },
+    {
+      "path": "rank20/kline/UR701.json",
+      "bytes": 17020,
+      "sha256": "99b2e38139c3430015c182c8be72b306cc0aab0a0d46ee7f666359404e67d72b"
+    },
+    {
+      "path": "rank20/kline/V2612F.json",
+      "bytes": 7508,
+      "sha256": "955b4d536edf78af0d687a3ff727585ff6da0f9000f8337a9adc650b8d1fc939"
+    },
+    {
+      "path": "rank20/kline/V2701.json",
+      "bytes": 17366,
+      "sha256": "133144c0eee5ecf051f7e8ebd6702e97bc1d785bfbbc843d9becda309408deff"
+    },
+    {
+      "path": "rank20/kline/WR2701.json",
+      "bytes": 6882,
+      "sha256": "76483eecc3a22f5c06afcd0bab8f3c0166f2e3f0f2f457f9f874f45c38a9add1"
+    },
+    {
+      "path": "rank20/kline/Y2701.json",
+      "bytes": 17172,
+      "sha256": "687caecfc5d7dc1fffbb8a0124bdb1876441de870c5067c52a50b4c6e4cd7d2c"
+    },
+    {
+      "path": "rank20/kline/ZN2611.json",
+      "bytes": 21382,
+      "sha256": "39f310bf0933963a3756e579f4b86e80d2fc13d75892cfae229694c0f51f68c3"
+    },
+    {
+      "path": "rank20/kline/index.json",
+      "bytes": 10996,
+      "sha256": "18c6cc69285a204fd9bb6357acf1b9c40458b5aed5b29154a69969477baa9dca"
+    }
+  ],
+  "dailyFiles": 86,
+  "dailyContracts": 86,
+  "sharedHourlyDailyContracts": 82,
+  "dailyCalendarDates": 226,
+  "dailyStart": "20251103",
+  "dailyEnd": "20261009",
+  "hourlyCacheUpdatedAt": "2026-10-10T13:48:28.842Z",
+  "hourlyBarsByContract": [
+    {
+      "contract": "EC2611",
+      "count": 328,
+      "first": "2026-05-26 14:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "FU2611",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "MA611",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "PG2611",
+      "count": 1021,
+      "first": "2025-12-30 11:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "BZ2611",
+      "count": 711,
+      "first": "2026-01-15 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "LU2612",
+      "count": 1021,
+      "first": "2025-12-18 11:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "PL611",
+      "count": 578,
+      "first": "2026-03-09 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "BR2611",
+      "count": 1015,
+      "first": "2025-11-17 22:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "SC2611",
+      "count": 999,
+      "first": "2026-05-12 09:30",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "EB2611",
+      "count": 1021,
+      "first": "2026-01-14 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "NR2612",
+      "count": 803,
+      "first": "2025-12-16 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "PR611",
+      "count": 1021,
+      "first": "2025-12-22 13:45",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "PX611",
+      "count": 1021,
+      "first": "2025-12-01 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "TA701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "BU2611",
+      "count": 1021,
+      "first": "2025-12-31 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "RU2701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "PP2701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "PF611",
+      "count": 1002,
+      "first": "2025-12-12 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "A2611",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "L2701",
+      "count": 1021,
+      "first": "2026-01-19 14:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "BC2611",
+      "count": 511,
+      "first": "2026-01-08 11:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "CU2611",
+      "count": 1019,
+      "first": "2026-03-26 22:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "WR2701",
+      "count": 199,
+      "first": "2026-01-21 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "SR701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "V2701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "OI701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "TL2612",
+      "count": 694,
+      "first": "2026-03-16 10:30",
+      "last": "2026-10-09 15:15"
+    },
+    {
+      "contract": "M2701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "TF2612",
+      "count": 695,
+      "first": "2026-03-16 10:30",
+      "last": "2026-10-09 15:15"
+    },
+    {
+      "contract": "TS2612",
+      "count": 692,
+      "first": "2026-03-16 10:30",
+      "last": "2026-10-09 15:15"
+    },
+    {
+      "contract": "T2612",
+      "count": 692,
+      "first": "2026-03-16 10:30",
+      "last": "2026-10-09 15:15"
+    },
+    {
+      "contract": "BB2701",
+      "count": 172,
+      "first": "2026-03-26 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "LG2611",
+      "count": 817,
+      "first": "2025-11-26 14:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "B2611",
+      "count": 1021,
+      "first": "2026-01-07 22:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "RM701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "PB2611",
+      "count": 1018,
+      "first": "2026-02-05 11:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "SI2611",
+      "count": 862,
+      "first": "2025-11-17 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "JD2611",
+      "count": 836,
+      "first": "2025-11-26 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "AD2612",
+      "count": 664,
+      "first": "2025-12-15 22:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "AO2701",
+      "count": 1017,
+      "first": "2026-03-27 01:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "RR2612",
+      "count": 658,
+      "first": "2025-12-15 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "RB2701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "Y2701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "SS2611",
+      "count": 1014,
+      "first": "2026-03-20 00:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "SP2611",
+      "count": 1021,
+      "first": "2026-01-16 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "FB2611",
+      "count": 442,
+      "first": "2025-11-18 11:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "PK611",
+      "count": 841,
+      "first": "2025-11-17 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "OP2611",
+      "count": 452,
+      "first": "2025-11-25 14:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "ZN2611",
+      "count": 1016,
+      "first": "2026-03-26 01:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "IH2612",
+      "count": 460,
+      "first": "2026-04-20 10:30",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "CY611",
+      "count": 434,
+      "first": "2025-12-11 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "SF611",
+      "count": 811,
+      "first": "2025-11-17 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "UR701",
+      "count": 692,
+      "first": "2026-01-19 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "HC2701",
+      "count": 1021,
+      "first": "2026-01-16 23:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "AL2611",
+      "count": 1016,
+      "first": "2026-03-27 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "SM611",
+      "count": 712,
+      "first": "2025-11-18 14:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "EG2611",
+      "count": 1021,
+      "first": "2026-01-13 22:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "PS2611",
+      "count": 729,
+      "first": "2025-11-17 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "IM2612",
+      "count": 459,
+      "first": "2026-04-20 10:30",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "SH611",
+      "count": 1021,
+      "first": "2026-01-16 22:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "IF2612",
+      "count": 459,
+      "first": "2026-04-20 10:30",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "SA701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "AU2612",
+      "count": 999,
+      "first": "2026-05-12 10:45",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "I2701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "IC2612",
+      "count": 459,
+      "first": "2026-04-20 10:30",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "C2611",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "SN2611",
+      "count": 1018,
+      "first": "2026-03-20 23:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "PT2612",
+      "count": 781,
+      "first": "2025-12-15 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "P2701",
+      "count": 1021,
+      "first": "2026-01-19 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "AP701",
+      "count": 688,
+      "first": "2026-01-19 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "CF701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "J2701",
+      "count": 1021,
+      "first": "2026-01-19 11:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "CS2611",
+      "count": 1021,
+      "first": "2026-01-19 14:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "JM2701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "NI2611",
+      "count": 1018,
+      "first": "2026-03-27 00:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "AG2612",
+      "count": 999,
+      "first": "2026-05-12 10:45",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "RS611",
+      "count": 116,
+      "first": "2025-11-21 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "FG701",
+      "count": 1021,
+      "first": "2026-01-19 15:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "LH2611",
+      "count": 836,
+      "first": "2025-11-26 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "CJ701",
+      "count": 692,
+      "first": "2026-01-19 10:00",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "PD2612",
+      "count": 761,
+      "first": "2025-12-16 11:15",
+      "last": "2026-10-09 15:00"
+    },
+    {
+      "contract": "LC2701",
+      "count": 692,
+      "first": "2026-01-19 10:00",
+      "last": "2026-10-09 15:00"
+    }
+  ],
+  "hourlyBarsMin": 116,
+  "hourlyBarsMax": 1021,
+  "backtestStart": "20260302",
+  "backtestEnd": "20261009",
+  "sar": {
+    "step": 0.02,
+    "max": 0.2
+  },
+  "sarWarmupBars": 100,
+  "generatedAt": "2026-10-10T13:49:11.724Z"
+}

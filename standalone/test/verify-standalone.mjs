@@ -289,4 +289,4 @@ const pass = results.filter((r) => r.pass).length
 const fail = results.length - pass
 console.log(`\n=== 结果：${pass}/${results.length} 通过${fail ? `，${fail} 失败` : ''} ===`)
 if (fail) for (const r of results.filter((x) => !x.pass)) console.log(`  ✗ ${r.id} ${r.name} ${r.extra}`)
-process.exit(fail ? 1 : 0)
+process.exitCode = fail ? 1 : 0

@@ -16,7 +16,7 @@ const SERVICE_ROOT = resolve(here, '..')
 const WORKSPACE = resolve(SERVICE_ROOT, '..')
 
 // ── 测试环境：与线上隔离（自己的端口 / 自己的数据目录）─────────────────
-const TMP = join(SERVICE_ROOT, 'var-test')
+const TMP = join(SERVICE_ROOT, `var-test-${process.pid}-${Date.now()}`)
 rmSync(TMP, { recursive: true, force: true })
 mkdirSync(TMP, { recursive: true })
 // 装载真实 K 线（官方日报 + 新浪历史）供 /kline 端点验证；只读复制，不改动原始数据
@@ -261,6 +261,10 @@ const logic = await getJson('/api/variety/sc/logic')
 check('V12', '硬逻辑端点返回规则推导（原 501 占位已落地）',
   logic.status === 200 && logic.body?.generatedBy === 'rules-v1' && Array.isArray(logic.body?.evidence),
   `${logic.body?.directionCN ?? '?'} / ${logic.body?.sector ?? '?'} / 证据 ${logic.body?.evidence?.length ?? 0} 条`)
+const sar = await getJson('/api/sar/latest')
+check('V13', 'SAR 排名端点返回覆盖状态与多空榜',
+  sar.status === 200 && sar.body?.coverage && Array.isArray(sar.body?.gainers) && Array.isArray(sar.body?.losers),
+  `状态 ${sar.body?.state ?? '?'} · 覆盖 ${sar.body?.coverage?.hourly ?? 0}/${sar.body?.coverage?.supported ?? 0}`)
 
 // 静态资源
 const page = await fetch(BASE + '/')
@@ -337,7 +341,8 @@ const h2 = await getJson('/api/health')
 check('V5c', `轮询无未捕获异常（err=${h2.body?.poller?.source?.err ?? '?'}）`, (h2.body?.poller?.source?.err ?? 1) < 5)
 
 poller.stop()
-server.close()
+await new Promise((resolve) => server.close(resolve))
+rmSync(TMP, { recursive: true, force: true })
 
 // ══════════════════════════════════════════════════════════════════════════
 const pass = results.filter((r) => r.pass).length

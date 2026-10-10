@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>期货 20 日涨跌幅 rank20 · 实时</title>
+<title>期货涨跌幅与 SAR 趋势排序 · 实时</title>
 <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
 
 <!-- ── 顶栏 ─────────────────────────────────────────────────────────── -->
 <header class="topbar">
-  <div class="brand">期货 rank20<span class="sub">实时</span></div>
+  <div class="brand">期货排序<span class="sub">实时</span></div>
 
   <div class="meta">
     <span class="kv"><i>交易日</i><b id="tradeDate">—</b></span>
@@ -26,6 +26,10 @@
   </div>
 
   <div class="tools">
+    <div class="modeSwitch" role="group" aria-label="排序指标">
+      <button id="viewRank20" class="active" type="button" aria-pressed="true">20 日</button>
+      <button id="viewSar" type="button" aria-pressed="false">1 小时 SAR</button>
+    </div>
     <input id="search" type="search" placeholder="搜索品种  /" autocomplete="off" />
   </div>
 </header>
@@ -64,6 +68,39 @@
           <th class="c-flag">标记</th>
         </tr></thead>
         <tbody id="bodyLoss"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<!-- ── 指标榜：1 小时 SAR 信号内按近 5 个交易日涨跌幅排序 ───────────── -->
+<main class="boards" id="boardsSar" hidden>
+  <section class="board" id="boardSarGain" tabindex="0">
+    <h2><span class="tag up">▲</span>1 小时 SAR 做多
+      <span class="hint" id="sarCoverage">小时线等待中</span>
+      <em id="sarGainCount">0 / 10</em></h2>
+    <div class="tableWrap">
+      <table class="grid sarGrid">
+        <thead><tr>
+          <th>排名</th><th>品种</th><th>主力合约</th><th>近 5 日涨跌%</th>
+          <th>SAR 信号</th><th>SAR 点位</th><th>信号时间（对应交易日）</th>
+        </tr></thead>
+        <tbody id="bodySarGain"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="board" id="boardSarLoss" tabindex="0">
+    <h2><span class="tag down">▼</span>1 小时 SAR 做空
+      <span class="hint">空头信号 · 按近 5 日涨幅升序</span>
+      <em id="sarLossCount">0 / 10</em></h2>
+    <div class="tableWrap">
+      <table class="grid sarGrid">
+        <thead><tr>
+          <th>排名</th><th>品种</th><th>主力合约</th><th>近 5 日涨跌%</th>
+          <th>SAR 信号</th><th>SAR 点位</th><th>信号时间（对应交易日）</th>
+        </tr></thead>
+        <tbody id="bodySarLoss"></tbody>
       </table>
     </div>
   </section>
@@ -123,7 +160,7 @@
 </section>
 
 <footer class="footer">
-  基准与收盘价：六交易所官方日报（**权威，优先**） · 历史日K与盘中价：新浪公开行情（补齐） · 板块分类为本项目内置表 · 局域网内部自用 · 不转售
+  基准与收盘价：六交易所官方日报 · 日K与盘中价：新浪公开行情 · SAR：新浪期货 60 分钟 K 线（只纳入有数据的合约）
   <span id="footStat"></span>
 </footer>
 

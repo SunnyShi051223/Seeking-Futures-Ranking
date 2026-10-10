@@ -29,6 +29,7 @@ const SUITES = [
   { name: '布局验收（双榜一屏、零滚动条）', cwd: 'realtime-server', args: ['test/verify-layout.mjs'] },
   { name: '模型 Key 安全 + 源探测（桩外部 HTTP）', cwd: 'realtime-server', args: ['test/verify-ops.mjs'] },
   { name: '前端渲染（最小 DOM 桩真跑 app.js）', cwd: 'realtime-server', args: ['test/verify-ops-ui.mjs'] },
+  { name: '1 小时 SAR + 5 日涨跌幅排序', cwd: 'realtime-server', args: ['test/verify-sar.mjs'] },
   { name: '实时链路诊断（桩外部 HTTP + 平移时钟）', cwd: 'realtime-server', args: ['test/diag-realtime.mjs'] },
   { name: 'K线 / 硬逻辑端到端', cwd: 'realtime-server', args: ['test/verify-kline.mjs'], tags: 'data' },
   { name: '实时服务验收（真打数据源）', cwd: 'realtime-server', args: ['test/verify.mjs'], tags: 'network' },

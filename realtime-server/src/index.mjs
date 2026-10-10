@@ -13,6 +13,7 @@ import { SnapshotHub } from './snapshot.mjs'
 import { Store } from './store.mjs'
 import { Poller } from './poller.mjs'
 import { startServer } from './server.mjs'
+import { SarService } from './sar.mjs'
 
 /**
  * 启动实时服务。
@@ -35,7 +36,8 @@ export async function main(opts = {}) {
   const store = new Store()
   const hub = new SnapshotHub()
   const baseWatcher = new BaseWatcher(config.baseFile)
-  const poller = new Poller(baseWatcher, hub, store)
+  const sarService = new SarService()
+  const poller = new Poller(baseWatcher, hub, store, { sarService })
 
   const server = await startServer({ poller, hub, baseWatcher })
   poller.start()

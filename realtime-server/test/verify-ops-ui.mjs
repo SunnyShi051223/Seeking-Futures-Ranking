@@ -53,15 +53,22 @@ class El {
       add: (c) => this.classList._s.add(c),
       remove: (c) => this.classList._s.delete(c),
       contains: (c) => this.classList._s.has(c),
-      toggle: (c) => (this.classList._s.has(c) ? (this.classList._s.delete(c), false) : (this.classList._s.add(c), true)),
+      toggle: (c, force) => {
+        const on = force === undefined ? !this.classList._s.has(c) : !!force
+        if (on) this.classList._s.add(c)
+        else this.classList._s.delete(c)
+        return on
+      },
     }
   }
   get innerHTML() { return this._html }
   set innerHTML(v) { this._html = String(v) }
   addEventListener(t, fn) { (this.handlers[t] ??= []).push(fn) }
   fire(t, ev = {}) { for (const fn of this.handlers[t] ?? []) fn({ preventDefault() {}, target: this, ...ev }) }
-  querySelector() { return null }
+  querySelector(selector) { return selector === '.panelClose' ? new El('panelClose', 'button') : null }
+  querySelectorAll() { return [] }
   appendChild(c) { this.children.push(c); return c }
+  insertBefore(c) { c.parentNode = this; return c }
   remove() {}
   removeChild(c) { this.children = this.children.filter((x) => x !== c) }
   focus() {}
@@ -125,13 +132,24 @@ const RESP = {
 let testReply = { ok: true, via: 'chat/completions', url: 'https://api.deepseek.com/v1/chat/completions', status: 200, latencyMs: 412, elapsedMs: 412, model: 'deepseek-chat', reply: 'pong', note: '模型已响应（消耗 1 token 以内）' }
 
 const fetchStub = async (url, opt = {}) => {
-  const p = String(url).split('?')[0]
-  calls.push({ path: p, method: opt.method ?? 'GET', body: opt.body ? JSON.parse(opt.body) : null })
+  const requestUrl = String(url)
+  const parsed = new URL(requestUrl, 'http://127.0.0.1:8899')
+  const p = parsed.pathname
+  calls.push({ path: p, url: requestUrl, method: opt.method ?? 'GET', body: opt.body ? JSON.parse(opt.body) : null })
   let body
   if (p === '/api/sources' || p === '/api/sources/probe') body = RESP['/api/sources']
   else if (p === '/api/model/config') body = opt.method === 'POST' ? { ok: true, config: RESP['/api/model/config'] } : RESP['/api/model/config']
   else if (p === '/api/model/test') body = testReply
   else if (p === '/api/model/key') body = { ok: true, config: { ...RESP['/api/model/config'], hasKey: false, keyMasked: '' } }
+  else if (/^\/api\/variety\/[a-z0-9]+\/sar-hourly$/.test(p)) body = {
+    variety: 'rb', contract: 'RB2701', interval: '60m', sourceLabel: '新浪期货 60 分钟 K 线',
+    signal: { time: '2026-10-09 15:00', direction: 'long', sar: 3200.25, covered: true },
+    bars: [
+      { d: '2026-10-09 14:00', time: '2026-10-09 14:00', o: 3210, h: 3230, l: 3200, c: 3220, v: 10, sar: 3190, sarDirection: 'long', src: 'sina60' },
+      { d: '2026-10-09 15:00', time: '2026-10-09 15:00', o: 3220, h: 3250, l: 3210, c: 3240, v: 12, sar: 3200.25, sarDirection: 'long', src: 'sina60' },
+    ],
+  }
+  else if (/^\/api\/variety\/[a-z0-9]+\/kline$/.test(p)) body = { variety: 'rb', contract: parsed.searchParams.get('contract') ?? 'RB2701', name: '螺纹钢', bars: [], note: '测试数据' }
   else body = {}
   return { ok: true, status: 200, json: async () => body, text: async () => JSON.stringify(body) }
 }
@@ -148,7 +166,7 @@ const win = { addEventListener() {}, location: { href: 'http://127.0.0.1:8899/' 
 const factory = new Function(
   'document', 'window', 'fetch', 'EventSource', 'setInterval', 'setTimeout', 'requestAnimationFrame', 'getComputedStyle', 'confirm', 'location',
   `${src}
-   return { renderSources, loadSources, loadModelConfig, saveModel, testModelConn, clearModelKey, initOps, state }`,
+   return { renderSources, loadSources, loadModelConfig, saveModel, testModelConn, clearModelKey, initOps, renderSarStatus, paintSar, setView, toggleExpand, loadPanel, renderSarDetails, klinePane, buildExpandRow, state }`,
 )
 const api = factory(
   document, win, fetchStub, ES,
@@ -240,6 +258,59 @@ check('U27', '再次点击展开', !$('ops').classList.contains('collapsed') && 
 
 check('U28', '**全过程结束后，任何 DOM 节点都不含明文 Key**', !domContains(KEY))
 check('U29', '所有响应里也没有明文 Key 进入页面', !$('srcRows').innerHTML.includes('sk-') || $('srcRows').innerHTML.includes('sk-********9Z8Y'))
+
+// ══════════════════════════════════════════════════════════════════════════
+console.log('\n=== ④ SAR 榜单视图渲染 ===')
+api.state.snap = { sar: { coverage: { longSignals: 1, shortSignals: 0 }, gainers: [], losers: [] } }
+api.renderSarStatus({
+  state: 'ok', sourceLabel: '新浪期货 60 分钟 K 线', params: { step: 0.02, max: 0.2 },
+  tradeDate: '20261009', coverage: { hourly: 5, supported: 8, rankable: 3 }, refreshedAt: '2026-10-10T06:30:00.000Z',
+})
+api.paintSar('gain', [{
+  variety: 'rb', name: '螺纹钢', contract: 'RB2701', direction: 'long', pct_5d: 4.56,
+  sar: 3020.5, sar_time: '2026-10-09 14:00', sar_trade_date: '20261009',
+}], $('bodySarGain'))
+check('U30', '覆盖数、状态和多头行字段真实呈现',
+  $('sarCoverage').textContent.includes('5/8') && $('sarCoverage').textContent.includes('可排名 3') &&
+  $('sarCoverage').textContent.includes('2026-10-09') &&
+  $('bodySarGain').innerHTML.includes('螺纹钢') && $('bodySarGain').innerHTML.includes('+4.56%') &&
+  $('bodySarGain').innerHTML.includes('3,020.50') && $('bodySarGain').innerHTML.includes('2026-10-09 14:00 · 2026-10-09') &&
+  $('bodySarGain').innerHTML.includes('data-kind="sarGain"'))
+api.setView('sar')
+check('U31', '指标切换显示 SAR 双榜并更新按钮状态', $('boards').hidden && !$('boardsSar').hidden && $('viewSar').ariaPressed === 'true')
+
+const signal = {
+  variety: 'rb', name: '螺纹钢', contract: 'RB2701', direction: 'long', pct_5d: 4.56,
+  price: 3250, sar: 3200.25, sar_time: '2026-10-09 15:00', sar_trade_date: '20261009',
+  sar_asof_trade_date: '20261009', five_day_base_date: '20261002', five_day_base_close: 3100,
+}
+api.state.snap = {
+  all: [{ variety: 'rb', name: '螺纹钢', contract: 'RB2701', pct_20d: 2.1, is_live: false }],
+  sar: { tradeDate: '20261009', sourceLabel: '新浪期货 60 分钟 K 线' },
+}
+const parent = { insertBefore(child) { child.parentNode = this } }
+const sarTr = new El('sarRow', 'tr')
+sarTr.dataset = { variety: 'rb', kind: 'sarGain' }
+sarTr.parentNode = parent
+api.state.rows.sarGain.set('rb', sarTr)
+const beforeSarOpen = calls.length
+const openSar = api.toggleExpand('rb', 'sarGain', signal)
+api.state.expanded.tab = 'sarData'
+await openSar
+const sarHourlyCall = calls.slice(beforeSarOpen).find((c) => c.path === '/api/variety/rb/sar-hourly')
+const hourlyPane = api.klinePane(api.state.expanded, null)
+check('U32', '点击 SAR 行请求小时 OHLC 接口并展示具体信号详情',
+  sarHourlyCall?.url.includes('?contract=RB2701') &&
+  !calls.slice(beforeSarOpen).some((c) => c.path === '/api/variety/rb/kline') &&
+  !calls.slice(beforeSarOpen).some((c) => c.path === '/api/variety/rb/logic') &&
+  api.state.expanded?.kline?.contract === 'RB2701' && api.state.expanded?.kline?.interval === '60m' &&
+  $('expandPanel').innerHTML.includes('2026-10-09 15:00') &&
+  $('expandPanel').innerHTML.includes('排序截止交易日') && $('expandPanel').innerHTML.includes('1 小时 K 线图'))
+check('U33', 'SAR 小时图按时间戳精确标注信号 K 线，展开行使用七列宽度',
+  api.buildExpandRow().innerHTML.includes('colspan="7"') &&
+  hourlyPane.includes('小时 K 已标出 2026-10-09 15:00') &&
+  src.includes("const sarD = isHourly ? ex.sar?.sar_time : ex.sar?.sar_trade_date"))
+api.setView('rank20')
 
 // ══════════════════════════════════════════════════════════════════════════
 const pass = results.filter((r) => r.pass).length

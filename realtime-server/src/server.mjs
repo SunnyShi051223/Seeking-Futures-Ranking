@@ -19,6 +19,7 @@ import { KlineStore, applyLiveBar } from './kline.mjs'
 import { deriveLogic } from './logic.mjs'
 import { probeSources } from './probe.mjs'
 import { publicConfig, saveConfig, clearKey, testModel, maskKey } from './modelconfig.mjs'
+import { computeSarSeries, filterHourlyBarsToTradeDate } from './sar.mjs'
 
 /** 读取并解析 JSON 请求体（带上限，避免超大 body） */
 function readJsonBody(req, limit = 64 * 1024) {
@@ -206,6 +207,7 @@ export function createApp({ poller, hub, baseWatcher }) {
         ok: true,
         uptimeMs: Date.now() - startedAt,
         poller: poller.stats(),
+        sar: poller.sarService?.stats() ?? null,
         base: baseWatcher.table
           ? {
               tradeDate: baseWatcher.table.tradeDate,
@@ -243,6 +245,11 @@ export function createApp({ poller, hub, baseWatcher }) {
       return json(res, 200, hub.current)
     }
 
+    if (path === '/api/sar/latest') {
+      if (!hub.current?.sar) return json(res, 503, { error: 'SAR 榜单尚未生成' })
+      return json(res, 200, hub.current.sar)
+    }
+
     if (path === '/api/meta/varieties') {
       const b = baseWatcher.table
       if (!b) return json(res, 503, { error: 'base 未加载' })
@@ -259,12 +266,83 @@ export function createApp({ poller, hub, baseWatcher }) {
       })
     }
 
+    // ── SAR 展开图：与排名使用同一份新浪 60 分钟 OHLC 缓存 ─────────────
+    const sarHourlyRe = /^\/api\/variety\/([a-z0-9]+)\/sar-hourly$/i.exec(path)
+    if (sarHourlyRe) {
+      const variety = sarHourlyRe[1].toLowerCase()
+      const requestedContract = String(url.searchParams.get('contract') ?? '').trim().toUpperCase()
+      if (!/^[A-Z0-9]+$/.test(requestedContract)) return json(res, 400, { error: 'invalid_contract' })
+      const sar = hub.current?.sar
+      const ranked = [...(sar?.gainers ?? []), ...(sar?.losers ?? [])].find(
+        (r) => String(r.variety).toLowerCase() === variety && String(r.contract).toUpperCase() === requestedContract,
+      )
+      if (!ranked) return json(res, 404, { error: 'contract_not_available', variety, contract: requestedContract })
+
+      const cached = poller.sarService?.hourly?.get(requestedContract)
+      if (!cached?.bars?.length) {
+        return json(res, 503, { error: 'hourly_data_unavailable', variety, contract: requestedContract, note: '该合约暂无已缓存的新浪 60 分钟 OHLC 数据' })
+      }
+      const asofTradeDate = ranked.sar_asof_trade_date ?? sar.tradeDate
+      const bars = filterHourlyBarsToTradeDate(cached.bars, {
+        tradeDate: asofTradeDate,
+        tradingDates: baseWatcher.table?.tradingDates ?? [],
+      })
+      const series = computeSarSeries(bars)
+      const pointByTime = new Map(series.bars.map((point) => [point.time, point]))
+      const chartBars = bars.map((bar) => {
+        const point = pointByTime.get(bar.time)
+        return {
+          d: bar.time,
+          time: bar.time,
+          o: bar.o,
+          h: bar.h,
+          l: bar.l,
+          c: bar.c,
+          v: bar.v,
+          sar: point?.sar ?? null,
+          sarDirection: point?.direction ?? null,
+          src: 'sina60',
+        }
+      })
+      return json(res, 200, {
+        variety,
+        name: ranked.name,
+        contract: ranked.contract,
+        interval: '60m',
+        source: 'sina_hourly',
+        sourceLabel: '新浪期货 60 分钟 K 线',
+        fetchedAt: cached.fetchedAt ? new Date(cached.fetchedAt).toISOString() : null,
+        tradeDate: sar.tradeDate,
+        asofTradeDate,
+        signal: {
+          time: ranked.sar_time,
+          tradeDate: ranked.sar_trade_date,
+          direction: ranked.direction,
+          sar: ranked.sar,
+          covered: chartBars.some((bar) => bar.time === ranked.sar_time),
+        },
+        bars: chartBars,
+        note: '时间为小时 K 线实际时间；按榜单排序截止交易日过滤，OHLC 来自该合约新浪 60 分钟行情。',
+      })
+    }
+
     // ── 日K线（D3）：真实实现，替换原 501 预留 ─────────────────────────
     const klineRe = /^\/api\/variety\/([a-z0-9]+)\/kline$/i.exec(path)
     if (klineRe) {
       const variety = klineRe[1].toLowerCase()
       const days = Math.min(Math.max(Number(url.searchParams.get('days') ?? 120) || 120, 10), 250)
-      const contract = contractOf(variety)
+      const currentContract = contractOf(variety)
+      const requestedContract = String(url.searchParams.get('contract') ?? '').trim()
+      let contract = currentContract
+      if (requestedContract) {
+        if (!/^[a-z0-9]+$/i.test(requestedContract)) return json(res, 400, { error: 'invalid_contract' })
+        const sarMatch = [...(hub.current?.sar?.gainers ?? []), ...(hub.current?.sar?.losers ?? [])]
+          .some((r) => String(r.variety).toLowerCase() === variety && r.contract === requestedContract)
+        if (requestedContract !== currentContract && !sarMatch) {
+          return json(res, 404, { error: 'contract_not_available', variety, contract: requestedContract })
+        }
+        contract = requestedContract
+      }
       const doc = klineStore.get(contract)
       if (!doc) {
         return json(res, 200, {
@@ -276,7 +354,7 @@ export function createApp({ poller, hub, baseWatcher }) {
         })
       }
       // 用实时行情滚动最后一根（官方根不会被覆盖）
-      const live = liveQuoteFor(variety)
+      const live = contract === currentContract ? liveQuoteFor(variety) : null
       const rolled = applyLiveBar(doc, live)
       const bars = rolled.bars.slice(-days)
       const srcCount = {}

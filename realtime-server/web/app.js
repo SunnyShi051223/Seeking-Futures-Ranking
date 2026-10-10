@@ -12,7 +12,7 @@ const state = {
   pending: null,
   lastRedraw: 0,
   redrawTimer: null,
-  rows: { gain: new Map(), loss: new Map() },
+  rows: { gain: new Map(), loss: new Map(), sarGain: new Map(), sarLoss: new Map() },
   activeBoard: 'gain',
   filter: '',
   es: null,
@@ -32,6 +32,10 @@ const arrow = (v) => (v > 0 ? '▲' : v < 0 ? '▼' : '')
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 const dstr = (d) => (d && d.length === 8 ? `${d.slice(4, 6)}/${d.slice(6, 8)}` : d)
 const dlong = (d) => (d && d.length === 8 ? `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}` : d)
+const barLong = (d) => /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(String(d ?? '')) ? String(d) : dlong(d)
+const barAxis = (d) => /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(String(d ?? ''))
+  ? `${d.slice(5, 10)} ${d.slice(11, 16)}`
+  : d && d.length === 8 ? `${d.slice(4, 6)}/${d.slice(6, 8)}` : d
 
 // ── SSE ──────────────────────────────────────────────────────────────────
 function connect() {
@@ -115,12 +119,77 @@ function render(snap) {
 
   paint('gain', snap.gainers, $('bodyGain'))
   paint('loss', snap.losers, $('bodyLoss'))
+  paintSar('gain', snap.sar?.gainers ?? [], $('bodySarGain'))
+  paintSar('loss', snap.sar?.losers ?? [], $('bodySarLoss'))
+  renderSarStatus(snap.sar)
   replantExpandRow()
 
-  if (state.expanded) {
+  if (state.expanded && !state.expanded.sar) {
     const row = snap.all.find((r) => r.variety === state.expanded.variety)
     if (row && state.expanded.tab === 'kline' && state.expanded.kline) applyLiveToPanel(row)
   }
+}
+
+function paintSar(kind, rows, tbody) {
+  const mapKey = kind === 'gain' ? 'sarGain' : 'sarLoss'
+  const pool = state.rows[mapKey]
+  const visible = rows.filter((r) => !state.filter || r.name.includes(state.filter) || r.variety.includes(state.filter))
+  const seen = new Set()
+  tbody.innerHTML = visible.length
+    ? visible.map((r, i) => {
+        seen.add(r.variety)
+        const sign = r.direction === 'long' ? 'up' : 'down'
+        const signal = r.direction === 'long' ? '做多' : '做空'
+        const tradeDate = r.sar_trade_date ? ` · ${dlong(r.sar_trade_date)}` : ''
+        const selected = state.expanded?.kind === mapKey && state.expanded?.variety === r.variety
+        return `<tr data-variety="${esc(r.variety)}" data-kind="${mapKey}" data-selected="${selected ? '1' : '0'}" class="${selected ? 'open' : ''}">
+          <td class="rank">${i + 1}</td>
+          <td class="name">${esc(r.name)} <span class="muted">${esc(r.variety)}</span></td>
+          <td class="contract">${esc(r.contract)}</td>
+          <td class="num pct ${sign}">${arrow(r.pct_5d)} ${fmtPct(r.pct_5d)}%</td>
+          <td class="${sign}">${signal}</td>
+          <td class="num">${fmtNum(r.sar)}</td>
+          <td class="muted" title="该小时线归属的交易日">${esc(r.sar_time)}${esc(tradeDate)}</td>
+        </tr>`
+      }).join('')
+    : '<tr class="sarEmpty"><td colspan="7" class="muted">暂无满足数据覆盖条件的信号</td></tr>'
+  for (const [v, tr] of pool) if (!seen.has(v)) { tr.remove(); pool.delete(v) }
+  if (typeof tbody.querySelectorAll === 'function') {
+    for (const tr of tbody.querySelectorAll('tr[data-variety]')) {
+      pool.set(tr.dataset.variety, tr)
+      tr.addEventListener('click', () => toggleExpand(tr.dataset.variety, mapKey, rows.find((r) => String(r.variety) === tr.dataset.variety)))
+    }
+  }
+  const count = kind === 'gain' ? $('sarGainCount') : $('sarLossCount')
+  const total = kind === 'gain' ? state.snap?.sar?.coverage?.longSignals : state.snap?.sar?.coverage?.shortSignals
+  count.textContent = `${visible.length} / 10${total > visible.length ? ` · ${total} 个信号` : ''}`
+}
+
+function renderSarStatus(sar) {
+  const el = $('sarCoverage')
+  if (!sar) { el.textContent = '小时线等待中'; return }
+  const c = sar.coverage ?? {}
+  const stateText = {
+    idle: '等待拉取', loading: '小时线加载中', refreshing: '正在更新', cached: '本地缓存',
+    ok: '数据正常', stale: '部分沿用缓存', unavailable: '数据源暂不可用',
+  }[sar.state] ?? sar.state ?? '未知状态'
+  el.textContent = `信号截至 ${dlong(sar.tradeDate ?? '') || '—'} · 5 日涨幅降序 · 小时线 ${c.hourly ?? 0}/${c.supported ?? 0} · 可排名 ${c.rankable ?? 0} · ${stateText}`
+  el.title = [
+    `${sar.sourceLabel ?? '1 小时 K 线'}；SAR 参数 step=${sar.params?.step ?? 0.02}, max=${sar.params?.max ?? 0.2}`,
+    '近 5 日涨跌 = 当前价相对 5 个交易日前收盘价；列表时间是最后一根小时线的实际时间及其交易日，21:00 后和凌晨夜盘按交易日历归属；信号仅使用排序截止日及以前的数据。',
+    sar.refreshedAt ? `最近成功 ${sar.refreshedAt}` : '',
+    sar.lastError ?? '',
+  ].filter(Boolean).join('\n')
+}
+
+function setView(view) {
+  if (view === 'sar' && state.expanded) collapse()
+  $('boards').hidden = view !== 'rank20'
+  $('boardsSar').hidden = view !== 'sar'
+  $('viewRank20').classList.toggle('active', view === 'rank20')
+  $('viewSar').classList.toggle('active', view === 'sar')
+  $('viewRank20').ariaPressed = String(view === 'rank20')
+  $('viewSar').ariaPressed = String(view === 'sar')
 }
 
 const COLS = ['rank', 'name', 'contract', 'pct', 'pct1', 'price', 'oi', 'vol', 'turnover', 'flag']
@@ -149,8 +218,9 @@ function paint(kind, rows, tbody) {
     }
     fill(tr, r)
     tr.hidden = state.filter ? !(r.name.includes(state.filter) || r.variety.includes(state.filter)) : false
-    tr.dataset.selected = state.expanded?.variety === r.variety ? '1' : '0'
-    tr.classList.toggle('open', state.expanded?.variety === r.variety)
+    const selected = state.expanded?.kind === kind && state.expanded?.variety === r.variety
+    tr.dataset.selected = selected ? '1' : '0'
+    tr.classList.toggle('open', selected)
     if (prev ? prev.nextSibling !== tr : tbody.firstChild !== tr) tbody.insertBefore(tr, prev ? prev.nextSibling : tbody.firstChild)
     prev = tr
   }
@@ -206,17 +276,21 @@ const TABS = [
   ['data', '数据溯源'],
 ]
 
-function toggleExpand(variety, kind) {
-  if (state.expanded?.variety === variety) return collapse()
+function toggleExpand(variety, kind, item = null) {
+  if (state.expanded?.variety === variety && state.expanded?.kind === kind) return collapse()
   collapse(true)
+  const sarItem = kind.startsWith('sar')
+    ? item ?? state.snap?.sar?.[kind === 'sarGain' ? 'gainers' : 'losers']?.find((r) => r.variety === variety)
+    : null
   state.expanded = {
-    variety, kind, tab: 'kline', kline: null, logic: null, loading: true, error: null,
+    variety, kind, contract: sarItem?.contract ?? null, sar: sarItem,
+    tab: 'kline', kline: null, logic: null, loading: true, error: null,
     zoomIdx: ZOOM_DEFAULT, offset: 0, hoverDate: null, pickedDate: null,
   }
   markSelected()
   replantExpandRow()
   syncScrollPolicy()
-  loadPanel(variety)
+  return loadPanel(variety)
 }
 
 function collapse(silent) {
@@ -237,9 +311,9 @@ function syncScrollPolicy() {
 }
 
 function markSelected() {
-  for (const kind of ['gain', 'loss']) {
+  for (const kind of ['gain', 'loss', 'sarGain', 'sarLoss']) {
     for (const [, tr] of state.rows[kind]) {
-      const on = state.expanded?.variety === tr.dataset.variety
+      const on = state.expanded?.kind === kind && state.expanded?.variety === tr.dataset.variety
       tr.dataset.selected = on ? '1' : '0'
       tr.classList.toggle('open', on)
     }
@@ -257,7 +331,7 @@ function replantExpandRow() {
 function buildExpandRow() {
   const tr = document.createElement('tr')
   tr.className = 'expandRow'
-  tr.innerHTML = `<td colspan="10"><div class="panel" id="expandPanel"></div></td>`
+  tr.innerHTML = `<td colspan="${state.expanded?.kind?.startsWith('sar') ? 7 : 10}"><div class="panel" id="expandPanel"></div></td>`
   tr.addEventListener('click', (e) => e.stopPropagation())
   return tr
 }
@@ -265,20 +339,39 @@ function buildExpandRow() {
 async function loadPanel(variety) {
   const p = $('expandPanel')
   if (!p) return
-  p.innerHTML = `<div class="panelLoad">正在加载日K线与硬逻辑…</div>`
+  const target = state.expanded
+  const isSar = !!target?.sar
+  p.innerHTML = `<div class="panelLoad">正在加载${isSar ? 'SAR 合约 60 分钟小时线' : '日K线与硬逻辑'}…</div>`
   try {
+    const contract = isSar ? target.sar.contract : null
+    const qs = contract ? `&contract=${encodeURIComponent(contract)}` : ''
     const [k, l] = await Promise.all([
-      fetch(`/api/variety/${variety}/kline?days=250`).then((r) => r.json()),
-      fetch(`/api/variety/${variety}/logic`).then((r) => (r.ok ? r.json() : null)),
+      fetch(isSar
+        ? `/api/variety/${variety}/sar-hourly?contract=${encodeURIComponent(contract)}`
+        : `/api/variety/${variety}/kline?days=250${qs}`).then(async (r) => {
+        const body = await r.json()
+        if (!r.ok) throw new Error(body.error ?? `HTTP ${r.status}`)
+        return body
+      }),
+      isSar ? Promise.resolve(null) : fetch(`/api/variety/${variety}/logic`).then((r) => (r.ok ? r.json() : null)),
     ])
-    if (state.expanded?.variety !== variety) return
-    state.expanded.kline = k
-    state.expanded.logic = l
-    state.expanded.loading = false
+    if (state.expanded !== target) return
+    target.kline = k
+    target.logic = l
+    target.loading = false
+    const signalKey = k?.interval === '60m' ? target.sar?.sar_time : target.sar?.sar_trade_date
+    if (signalKey && k?.bars?.length) {
+      const idx = k.bars.findIndex((b) => b.d === signalKey)
+      const cnt = zoomCount(target)
+      if (idx >= 0) {
+        const start = Math.max(0, idx - Math.floor(cnt / 2))
+        target.offset = Math.min(Math.max(0, k.bars.length - cnt), k.bars.length - start - cnt)
+      }
+    }
   } catch (e) {
-    if (state.expanded?.variety !== variety) return
-    state.expanded.error = String(e)
-    state.expanded.loading = false
+    if (state.expanded !== target) return
+    target.error = String(e)
+    target.loading = false
   }
   renderPanel()
 }
@@ -286,9 +379,32 @@ async function loadPanel(variety) {
 /** 每个导航条板块的内容 HTML（测量与渲染共用同一份）*/
 function paneBody(tab, ex, row) {
   if (tab === 'kline') return klinePane(ex, row)
+  if (tab === 'sarData') return renderSarDetails(ex)
   if (tab === 'logic') return renderLogic(ex.logic)
   if (tab === 'theme') return renderTheme(ex.logic)
   return renderData(ex.kline, row)
+}
+
+function tabsFor(ex) {
+  return ex.sar ? [['kline', '1 小时 K 线图'], ['sarData', 'SAR 信号']] : TABS
+}
+
+function renderSarDetails(ex) {
+  const s = ex.sar
+  if (!s) return '<div class="panelLoad">SAR 信号已更新，请重新展开。</div>'
+  const meta = state.snap?.sar
+  const rows = [
+    ['方向', s.direction === 'long' ? '做多' : '做空'],
+    ['SAR 点位', fmtNum(s.sar, 4)],
+    ['小时线信号时间', s.sar_time],
+    ['信号交易日', dlong(s.sar_trade_date)],
+    ['排序截止交易日', dlong(s.sar_asof_trade_date ?? meta?.tradeDate)],
+    ['近 5 日涨跌幅', `${fmtPct(s.pct_5d)}%`],
+    ['涨跌基准', `${dlong(s.five_day_base_date)} 收盘 ${fmtNum(s.five_day_base_close, 4)}`],
+    ['近 5 日涨跌计算价', fmtNum(s.price, 4)],
+    ['数据来源', meta?.sourceLabel ?? '新浪期货 60 分钟 K 线'],
+  ]
+  return `<div class="sarDetails"><p class="muted">图表使用新浪原始 60 分钟 OHLC；竖线落在榜单信号对应的具体小时 K 线上，SAR 点位按每根小时线计算。</p><table class="kvTable"><tbody>${rows.map(([k, v]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td></tr>`).join('')}</tbody></table></div>`
 }
 
 /**
@@ -309,7 +425,7 @@ function fitPanelHeight(p) {
   probe.style.width = `${w}px`
   document.body.appendChild(probe)
   let max = 0
-  for (const [k] of TABS) {
+  for (const [k] of tabsFor(ex)) {
     probe.innerHTML = paneBody(k, ex, row)
     max = Math.max(max, probe.scrollHeight)
   }
@@ -324,14 +440,15 @@ function renderPanel() {
   if (!ex || !p) return
   const row = state.snap?.all?.find((r) => r.variety === ex.variety)
   const name = row?.name ?? ex.kline?.name ?? ex.variety
-  const contract = row?.contract ?? ex.kline?.contract ?? ''
+  const contract = ex.sar?.contract ?? row?.contract ?? ex.kline?.contract ?? ''
 
   const nav = `<nav class="panelNav" role="tablist">
-    ${TABS.map(([k, t]) => `<button role="tab" data-tab="${k}" class="${ex.tab === k ? 'active' : ''}" aria-selected="${ex.tab === k}">${t}</button>`).join('')}
+    ${tabsFor(ex).map(([k, t]) => `<button role="tab" data-tab="${k}" class="${ex.tab === k ? 'active' : ''}" aria-selected="${ex.tab === k}">${t}</button>`).join('')}
     <span class="panelHead">
       <b>${esc(name)}</b> <code>${esc(contract)}</code>
-      ${row ? `<span class="pill small" data-state="${row.is_live ? 'ok' : 'warn'}"><span class="dot"></span><span>${row.is_live ? '实时' : '日报'}</span></span>` : ''}
-      <span class="muted">20日 ${fmtPct(row?.pct_20d)}%</span>
+      ${ex.sar ? `<span class="pill small" data-state="${ex.sar.quote_is_live ? 'ok' : 'warn'}"><span class="dot"></span><span>${ex.sar.quote_is_live ? '实时' : '日报'}</span></span>` : row ? `<span class="pill small" data-state="${row.is_live ? 'ok' : 'warn'}"><span class="dot"></span><span>${row.is_live ? '实时' : '日报'}</span></span>` : ''}
+      <span class="muted">${ex.sar ? `5日 ${fmtPct(ex.sar.pct_5d)}%` : `20日 ${fmtPct(row?.pct_20d)}%`}</span>
+      ${ex.sar ? `<span class="sarPanelSignal ${ex.sar.direction === 'long' ? 'up' : 'down'}">SAR ${ex.sar.direction === 'long' ? '做多' : '做空'} · 信号 ${esc(ex.sar.sar_time)} · 交易日 ${dlong(ex.sar.sar_trade_date)}</span>` : ''}
     </span>
     <button class="panelClose" title="折叠 (Esc)">✕ 折叠</button>
   </nav>`
@@ -373,7 +490,14 @@ function renderPanel() {
 }
 
 function klinePane(ex, row) {
-  const max = ex.kline?.bars?.length ?? 0
+  const isHourly = ex.kline?.interval === '60m'
+  const hasSignalBar = ex.sar && ex.kline?.bars?.some((b) => b.d === (isHourly ? ex.sar.sar_time : ex.sar.sar_trade_date))
+  const markerText = ex.sar
+    ? hasSignalBar ? `小时 K 已标出 ${ex.sar.sar_time}` : `小时 K 未覆盖 ${ex.sar.sar_time}`
+    : ''
+  const sarNote = ex.sar
+    ? `<span class="sarChartNote ${ex.sar.direction === 'long' ? 'up' : 'down'}">SAR ${ex.sar.direction === 'long' ? '做多' : '做空'} · ${markerText}</span>`
+    : ''
   return `
   <div class="chartBar">
     <span class="zoomGroup">
@@ -383,6 +507,7 @@ function klinePane(ex, row) {
     </span>
     <span class="muted" id="kmeta"></span>
     <button class="ghostBtn" id="kclear">清除选中</button>
+    ${sarNote}
     <span class="muted tipHint">划过看读数 · <b>点击</b>该根固定到下方 · 可左右拖动平移</span>
   </div>
   <div class="chartWrap" id="chartWrap"><canvas id="kchart"></canvas></div>
@@ -540,7 +665,7 @@ function applyLiveToPanel(row) {
 //  Canvas 蜡烛图（整图重绘，避免残留；含时间横轴 / 十字光标 / 点击固定）
 // ══════════════════════════════════════════════════════════════════════════
 const CH = { main: 250, vol: 64, oi: 64, axis: 26, top: 10, right: 64, left: 8 }
-const chTotal = () => CH.top + CH.main + CH.vol + CH.oi + CH.axis
+const chTotal = (oiHeight = CH.oi) => CH.top + CH.main + CH.vol + oiHeight + CH.axis
 
 /**
  * 视口（**亚根精度**）。
@@ -698,12 +823,15 @@ function drawChart() {
   if (!cv || !wrap || !ex) return
   const vp = viewport()
   const bars = vp.bars
+  const isHourly = ex.kline?.interval === '60m'
+  const hasOI = ex.kline?.bars?.some((b) => Number(b.oi) > 0) ?? bars.some((b) => Number(b.oi) > 0)
+  const oiHeight = hasOI ? CH.oi : 0
   const meta = $('kmeta')
   if (meta && ex.kline) {
     const tot = ex.kline.bars.length
     const off = Math.round(ex.offset ?? 0)
     const posTip = off === 0 ? '最新' : `左移 ${off} 根`
-    const mt = `共 ${tot} 根 · 显示 ${Math.min(zoomCount(ex), tot)} 根（${dlong(bars[0]?.d)} → ${dlong(bars[bars.length - 1]?.d)}，${posTip}）`
+    const mt = `共 ${tot} 根 · 显示 ${Math.min(zoomCount(ex), tot)} 根（${barLong(bars[0]?.d)} → ${barLong(bars[bars.length - 1]?.d)}，${posTip}）`
     if (meta.textContent !== mt) meta.textContent = mt
     const zi = ex.zoomIdx ?? ZOOM_DEFAULT
     const bIn = $('kzoomIn'); const bOut = $('kzoomOut')
@@ -717,7 +845,7 @@ function drawChart() {
 
   const dpr = window.devicePixelRatio || 1
   const W = Math.max(360, wrap.clientWidth)
-  const H = chTotal()
+  const H = chTotal(oiHeight)
   if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) {
     cv.style.width = `${W}px`
     cv.style.height = `${H}px`
@@ -738,8 +866,11 @@ function drawChart() {
 
   const y0 = CH.top
   const yMainBot = y0 + CH.main
-  const lo = Math.min(...bars.map((b) => (Number.isFinite(b.l) ? b.l : b.c)))
-  const hi = Math.max(...bars.map((b) => (Number.isFinite(b.h) ? b.h : b.c)))
+  const sarRange = isHourly
+    ? bars.filter((b) => b.sar !== null && b.sar !== undefined && Number.isFinite(Number(b.sar))).map((b) => Number(b.sar))
+    : []
+  const lo = Math.min(...bars.map((b) => (Number.isFinite(b.l) ? b.l : b.c)), ...sarRange)
+  const hi = Math.max(...bars.map((b) => (Number.isFinite(b.h) ? b.h : b.c)), ...sarRange)
   const padv = (hi - lo) * 0.06 || 1
   const y = (p) => yMainBot - ((p - (lo - padv)) / (hi - lo + padv * 2)) * (CH.main - 8) - 4
 
@@ -762,7 +893,7 @@ function drawChart() {
     g.fillText(p.toFixed(p > 1000 ? 0 : 2), CH.left + plotW + 6, yy + 3)
   }
 
-  // 均线
+  // 日 K 显示日均线；小时 SAR 图上的点位直接显示策略使用的小时级 SAR 序列。
   const ma = (k) => bars.map((_, i) => (i + 1 < k ? null : bars.slice(i + 1 - k, i + 1).reduce((a, b) => a + b.c, 0) / k))
   const drawMa = (arr, color) => {
     g.strokeStyle = color; g.lineWidth = 1.2; g.beginPath()
@@ -774,7 +905,9 @@ function drawChart() {
     })
     g.stroke()
   }
-  drawMa(ma(5), '#e8c46a'); drawMa(ma(10), '#6aa9e8'); drawMa(ma(20), '#c58fe8')
+  if (!isHourly) {
+    drawMa(ma(5), '#e8c46a'); drawMa(ma(10), '#6aa9e8'); drawMa(ma(20), '#c58fe8')
+  }
 
   // 选中/悬停高亮带（按**日期**定位，缩放/平移后仍能对上）
   const pickIdx = ex.pickedDate ? bars.findIndex((b) => b.d === ex.pickedDate) : -1
@@ -802,16 +935,54 @@ function drawChart() {
     }
   })
 
+  // 每根小时 K 的 SAR 点位。
+  if (isHourly) {
+    bars.forEach((b, i) => {
+      if (b.sar === null || b.sar === undefined || !Number.isFinite(Number(b.sar))) return
+      g.fillStyle = b.sarDirection === 'long' ? C_UP : C_DOWN
+      g.globalAlpha = 0.88
+      g.beginPath(); g.arc(x(i), y(Number(b.sar)), 2.3, 0, Math.PI * 2); g.fill()
+      g.globalAlpha = 1
+    })
+  }
+
   // 基准日竖线
   const refD = ex.kline?.refDate
   if (refD) {
     const idx = bars.findIndex((b) => b.d >= refD)
     if (idx >= 0) {
       g.save(); g.setLineDash([4, 3]); g.strokeStyle = 'rgba(245,165,36,.85)'; g.lineWidth = 1
-      g.beginPath(); g.moveTo(x(idx), y0); g.lineTo(x(idx), yMainBot + CH.vol + CH.oi); g.stroke()
+      g.beginPath(); g.moveTo(x(idx), y0); g.lineTo(x(idx), yMainBot + CH.vol + oiHeight); g.stroke()
       g.restore()
       g.fillStyle = 'rgba(245,165,36,.95)'; g.font = '10.5px sans-serif'
       g.fillText(`基准日 ${dstr(refD)}`, Math.min(x(idx) + 4, W - 96), y0 + 11)
+      g.font = '10.5px ui-monospace, Consolas, monospace'
+    }
+  }
+
+  // SAR 榜精确标记信号小时；日 K 兼容旧快照时仍按交易日定位。
+  const sarD = isHourly ? ex.sar?.sar_time : ex.sar?.sar_trade_date
+  if (sarD) {
+    const idx = bars.findIndex((b) => b.d === sarD)
+    if (idx >= 0) {
+      const sarCol = ex.sar.direction === 'short' ? C_DOWN : C_UP
+      g.save(); g.setLineDash([2, 3]); g.strokeStyle = sarCol; g.lineWidth = 1.4
+      g.beginPath(); g.moveTo(x(idx), y0); g.lineTo(x(idx), yMainBot + CH.vol + oiHeight); g.stroke()
+      g.restore()
+      g.fillStyle = sarCol; g.font = '10.5px sans-serif'
+      const label = `信号 ${ex.sar.direction === 'long' ? '做多' : '做空'} ${isHourly ? sarD : dstr(sarD)}`
+      g.fillText(label, Math.min(x(idx) + 4, W - (isHourly ? 210 : 100)), y0 + 25)
+      const point = isHourly ? bars[idx].sar : ex.sar.sar
+      if (point !== null && point !== undefined && Number.isFinite(Number(point))) {
+        const sy = Math.max(y0 + 5, Math.min(yMainBot - 5, y(Number(point))))
+        g.save()
+        g.lineWidth = 2
+        g.strokeStyle = '#fff'
+        g.beginPath(); g.arc(x(idx), sy, isHourly ? 5 : 4, 0, Math.PI * 2); g.stroke()
+        g.fillStyle = sarCol
+        g.beginPath(); g.arc(x(idx), sy, isHourly ? 3.5 : 4, 0, Math.PI * 2); g.fill()
+        g.restore()
+      }
       g.font = '10.5px ui-monospace, Consolas, monospace'
     }
   }
@@ -829,28 +1000,28 @@ function drawChart() {
     g.globalAlpha = 1
   })
 
-  // 持仓量副图
+  // 持仓量副图（新浪 60 分钟源未提供持仓量时收起该区域，保留成交量和时间轴）。
   const oTop = vTop + CH.vol
-  g.strokeStyle = C_AXIS; g.beginPath(); g.moveTo(CH.left, oTop); g.lineTo(CH.left + plotW, oTop); g.stroke()
-  g.fillStyle = C_TXT; g.fillText('持仓量', CH.left + 2, oTop + 12)
   const oiVals = bars.map((b) => b.oi || 0).filter((v) => v > 0)
   if (oiVals.length > 1) {
+    g.strokeStyle = C_AXIS; g.beginPath(); g.moveTo(CH.left, oTop); g.lineTo(CH.left + plotW, oTop); g.stroke()
+    g.fillStyle = C_TXT; g.fillText('持仓量', CH.left + 2, oTop + 12)
     const oMin = Math.min(...oiVals), oMax = Math.max(...oiVals)
     g.strokeStyle = '#8fb7ff'; g.lineWidth = 1.3; g.beginPath()
     let started = false
     bars.forEach((b, i) => {
       if (!b.oi) return
-      const py = oTop + CH.oi - 6 - ((b.oi - oMin) / (oMax - oMin || 1)) * (CH.oi - 22)
+      const py = oTop + oiHeight - 6 - ((b.oi - oMin) / (oMax - oMin || 1)) * (oiHeight - 22)
       started ? g.lineTo(x(i), py) : (g.moveTo(x(i), py), (started = true))
     })
     g.stroke()
     g.fillStyle = C_TXT
     g.fillText(fmtInt(oMax), CH.left + plotW + 6, oTop + 20)
-    g.fillText(fmtInt(oMin), CH.left + plotW + 6, oTop + CH.oi - 6)
+    g.fillText(fmtInt(oMin), CH.left + plotW + 6, oTop + oiHeight - 6)
   }
 
   // ── 时间横轴（原来缺失）────────────────────────────────────────────
-  const axTop = oTop + CH.oi
+  const axTop = oTop + oiHeight
   g.strokeStyle = C_AXIS; g.beginPath(); g.moveTo(CH.left, axTop); g.lineTo(CH.left + plotW, axTop); g.stroke()
   const every = Math.max(1, Math.ceil(n / Math.max(4, Math.floor(plotW / 78))))
   g.fillStyle = C_TXT
@@ -859,7 +1030,7 @@ function drawChart() {
     if (i % every !== 0 && i !== n - 1) return
     const px = x(i)
     g.strokeStyle = C_AXIS; g.beginPath(); g.moveTo(px, axTop); g.lineTo(px, axTop + 4); g.stroke()
-    const label = b.d.length === 8 ? `${b.d.slice(4, 6)}/${b.d.slice(6, 8)}` : b.d
+    const label = barAxis(b.d)
     g.fillText(label, Math.min(Math.max(px, 18), CH.left + plotW - 18), axTop + 17)
   })
   // 年份提示（跨越年份时）
@@ -886,7 +1057,7 @@ function drawChart() {
     g.fillStyle = '#fff'; g.textAlign = 'left'
     g.fillText(hb.c.toFixed(hb.c > 1000 ? 0 : 2), CH.left + plotW + 6, y(hb.c) + 3)
     // 顶部日期气泡
-    const lbl = dlong(hb.d)
+    const lbl = barLong(hb.d)
     const tw = g.measureText(lbl).width + 12
     g.fillStyle = 'rgba(74,158,255,.9)'
     g.fillRect(Math.min(cx - tw / 2, W - tw - 2), y0 - 2, tw, 16)
@@ -899,16 +1070,19 @@ function drawChart() {
   const legend = $('chartLegend')
   if (legend) {
     const last = bars[bars.length - 1]
-    const sig = `${ex.kline?.refDate}|${last.d}|${last.src}`
+    const sig = `${ex.kline?.contract}|${ex.kline?.refDate}|${last.d}|${last.src}|${ex.sar?.contract ?? ''}|${ex.sar?.direction ?? ''}|${ex.sar?.sar_time ?? ''}|${ex.sar?.sar_trade_date ?? ''}|${ex.sar?.sar ?? ''}`
     if (sig !== LEGEND_SIG) {
       LEGEND_SIG = sig
       legend.innerHTML = [
-        `<span class="lg"><i style="background:#e8c46a"></i>MA5</span>`,
-        `<span class="lg"><i style="background:#6aa9e8"></i>MA10</span>`,
-        `<span class="lg"><i style="background:#c58fe8"></i>MA20</span>`,
-        `<span class="lg"><i class="dash"></i>基准日 ${dstr(ex.kline?.refDate ?? '')}</span>`,
-        `<span class="lg"><i class="live"></i>形成中</span>`,
-        `<span class="lg muted">最后一根 ${dlong(last.d)}${last.src === 'live' ? '（形成中）' : ''}</span>`,
+        ...(!isHourly ? [
+          `<span class="lg"><i style="background:#e8c46a"></i>MA5</span>`,
+          `<span class="lg"><i style="background:#6aa9e8"></i>MA10</span>`,
+          `<span class="lg"><i style="background:#c58fe8"></i>MA20</span>`,
+          `<span class="lg"><i class="dash"></i>基准日 ${dstr(ex.kline?.refDate ?? '')}</span>`,
+        ] : []),
+        ...(ex.sar ? [`<span class="lg"><i class="sar ${ex.sar.direction === 'long' ? 'up' : 'down'}"></i>SAR ${ex.sar.direction === 'long' ? '做多' : '做空'} · ${barLong(ex.sar.sar_time)}</span>`] : []),
+        ...(isHourly ? [`<span class="lg muted">${esc(ex.kline?.sourceLabel ?? '新浪 60 分钟 K 线')}</span>`] : [`<span class="lg"><i class="live"></i>形成中</span>`]),
+        `<span class="lg muted">最后一根 ${barLong(last.d)}${last.src === 'live' ? '（形成中）' : ''}</span>`,
       ].join('')
     }
   }
@@ -948,8 +1122,8 @@ function updateReadout() {
   const dir = b.c >= b.o ? 'up' : 'down'
   el.innerHTML = `
     <div class="roHead">
-      <b>${dlong(b.d)}</b>
-      <span class="srcTag ${b.src.startsWith('eod') ? 'official' : b.src === 'live' ? 'live' : 'derived'}">${b.src}</span>
+      <b>${barLong(b.d)}</b>
+      <span class="srcTag ${b.src?.startsWith('eod') ? 'official' : b.src === 'live' ? 'live' : 'derived'}">${ex.kline?.interval === '60m' ? '新浪60分钟' : b.src}</span>
       ${pinned ? '<span class="pinTag">已固定</span>' : '<span class="muted">（未点击 = 跟随鼠标 / 显示最新）</span>'}
     </div>
     <div class="roGrid">
@@ -958,9 +1132,9 @@ function updateReadout() {
       <span>低 <b>${fmtNum(b.l, 2)}</b></span>
       <span>收 <b class="${dir}">${fmtNum(b.c, 2)}</b></span>
       <span>较前收 <b class="${dirOf(chg)}">${chg === null ? '—' : fmtPct(chg) + '%'}</b></span>
-      <span>结算 <b>${b.s ? fmtNum(b.s, 2) : '—'}</b></span>
+      ${ex.kline?.interval === '60m' ? `<span>SAR <b>${fmtNum(b.sar, 4)} · ${b.sarDirection === 'long' ? '多头' : b.sarDirection === 'short' ? '空头' : '—'}</b></span>` : `<span>结算 <b>${b.s ? fmtNum(b.s, 2) : '—'}</b></span>`}
       <span>成交量 <b>${fmtInt(b.v)}</b></span>
-      <span>持仓量 <b>${fmtInt(b.oi)}</b></span>
+      ${ex.kline?.interval === '60m' ? '' : `<span>持仓量 <b>${fmtInt(b.oi)}</b></span>`}
       <span>成交额 <b>${b.to ? fmtInt(b.to) + ' 万' : '—'}</b></span>
     </div>`
 }
@@ -1164,10 +1338,14 @@ function repaintAll() {
   if (!state.snap) return
   paint('gain', state.snap.gainers, $('bodyGain'))
   paint('loss', state.snap.losers, $('bodyLoss'))
+  paintSar('gain', state.snap.sar?.gainers ?? [], $('bodySarGain'))
+  paintSar('loss', state.snap.sar?.losers ?? [], $('bodySarLoss'))
   replantExpandRow()
 }
 
 $('search').addEventListener('input', (e) => { state.filter = e.target.value.trim(); repaintAll() })
+$('viewRank20').addEventListener('click', () => setView('rank20'))
+$('viewSar').addEventListener('click', () => setView('sar'))
 window.addEventListener('resize', () => { if (state.expanded?.tab === 'kline') drawChart() })
 
 for (const tbody of [$('bodyGain'), $('bodyLoss')]) {

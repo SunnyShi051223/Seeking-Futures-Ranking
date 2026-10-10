@@ -15,6 +15,8 @@ import { log } from './log.mjs'
 import { fetchQuotes } from './sources/index.mjs'
 import { buildSnapshot } from './ranker.mjs'
 import { Health, Gatekeeper } from './health.mjs'
+import { KlineStore } from './kline.mjs'
+import { buildSarRanking } from './sar.mjs'
 
 export class Poller {
   /**
@@ -22,10 +24,13 @@ export class Poller {
    * @param {import('./snapshot.mjs').SnapshotHub} hub
    * @param {import('./store.mjs').Store} store
    */
-  constructor(baseWatcher, hub, store) {
+  constructor(baseWatcher, hub, store, { sarService = null, klineStore = new KlineStore() } = {}) {
     this.baseWatcher = baseWatcher
     this.hub = hub
     this.store = store
+    this.sarService = sarService
+    this.klineStore = klineStore
+    this.sarRefreshPromise = null
     this.health = new Health('sina')
     this.gates = new Gatekeeper()
     this.idleRounds = 0
@@ -47,6 +52,7 @@ export class Poller {
     this.baseWatcher.refresh()
     this.prevRank = this.store.loadTodayRank(this.baseWatcher.table?.tradeDate ?? '')
     this.#seed()
+    this.#kickSarRefresh(this.baseWatcher.table)
     this.#schedule(200)
   }
 
@@ -61,11 +67,11 @@ export class Poller {
   #seed() {
     const base = this.baseWatcher.table
     if (!base || this.hub.current) return
-    const snap = buildSnapshot(base, new Map(), {
+    const snap = this.#attachSar(buildSnapshot(base, new Map(), {
       sourceId: 'daily_snapshot',
       prevRank: this.prevRank,
       now: new Date(),
-    })
+    }))
     if (!snap.all.length) return
     this.hub.publish(snap)
     this.store.writeHumanFiles(snap)
@@ -105,6 +111,8 @@ export class Poller {
         return this.#schedule(10000)
       }
 
+      this.#kickSarRefresh(base)
+
       // 基准表刚到位（或服务刚起）而内存里还没有快照 → 先播种日报口径，保证前端不空白
       if (!this.hub.current) this.#seed()
 
@@ -134,11 +142,11 @@ export class Poller {
       }
       this.health.recordOk(Date.now() - started)
 
-      const snap = buildSnapshot(base, res.quotes, {
+      const snap = this.#attachSar(buildSnapshot(base, res.quotes, {
         sourceId: res.sourceId,
         prevRank: this.prevRank,
         now: new Date(),
-      })
+      }))
 
       // 自适应：本轮是否有任何品种的价格/涨跌幅变化
       const sig = snap.all.map((r) => `${r.variety}:${r.price}`).join('|')
@@ -191,6 +199,41 @@ export class Poller {
       dropped: this.hub.dropped,
       gate: this.gates.snapshot(),
       source: this.health.snapshot(),
+      sar: this.sarService?.stats() ?? null,
     }
+  }
+
+  #attachSar(snapshot) {
+    snapshot.sar = this.sarService
+      ? this.sarService.build(snapshot.all, snapshot.tradeDate, this.klineStore, this.baseWatcher.table?.tradingDates)
+      : buildSarRanking({
+          rows: snapshot.all,
+          hourlyBarsByContract: new Map(),
+          dailyBarsByContract: new Map(),
+          tradeDate: snapshot.tradeDate,
+        })
+    return snapshot
+  }
+
+  #kickSarRefresh(base) {
+    if (!this.sarService || !base || this.sarRefreshPromise) return
+    const refresh = this.sarService.refresh(base.rows)
+    this.sarRefreshPromise = refresh
+      .then((result) => {
+        if (!result.changed || !this.hub.current) return
+        const current = {
+          ...this.hub.current,
+          sar: this.sarService.build(
+            this.hub.current.all,
+            this.hub.current.tradeDate,
+            this.klineStore,
+            this.baseWatcher.table?.tradingDates,
+          ),
+        }
+        this.hub.publish(current)
+        this.lastSnapshot = current
+      })
+      .catch((e) => log.warn(`SAR 小时线刷新失败：${e instanceof Error ? e.message : String(e)}`))
+      .finally(() => { this.sarRefreshPromise = null })
   }
 }
